@@ -25,9 +25,14 @@
 }
 
 #main_submit{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#copyright{
+  font-size: 0.625em;
+  color: gray;
 }
 /* #search_button{
   color: white;

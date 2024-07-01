@@ -34,17 +34,17 @@ const hbs = handlebars.create({
   );
   
   // -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
-const dbConfig = {
+/* const dbConfig = {
     host: 'db',
     port: 5432,
     database: process.env.POSTGRES_DB,
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
   };
-  const db = pgp(dbConfig);
+  const db = pgp(dbConfig); */
   
   // db test
-  db.connect()
+/*   db.connect()
     .then(obj => {
       // Can check the server version here (pg-promise v10.1.0+):
       console.log('Database connection successful');
@@ -52,4 +52,19 @@ const dbConfig = {
     })
     .catch(error => {
       console.log('ERROR', error.message || error);
-    });
+    }); */
+
+
+
+// -------------------------------------  ROUTES for home.hbs   ----------------------------------------------
+
+
+app.get('/', (req, res) => {
+  res.render('pages/home', {
+  });
+});
+
+// -------------------------------------  START THE SERVER   ----------------------------------------------
+
+app.listen(3000);
+console.log('Server is listening on port 3000');
