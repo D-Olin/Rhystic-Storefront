@@ -1,13 +1,15 @@
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
 const app = express();
-const handlebars = require('express-handlebars');
 const path = require('path');
+app.use(express.static('resources'));
+const handlebars = require('express-handlebars');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
+
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
@@ -32,6 +34,7 @@ const hbs = handlebars.create({
       extended: true,
     })
   );
+
   
   // -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
 /* const dbConfig = {

@@ -6,10 +6,11 @@
     "express-session": "^1.18.0",
     "handlebars": "^4.7.8",
     "nodemon": "^3.1.4",
+    "path": "^0.12.7",
     "pg-promise": "^11.8.0"
   },
   "scripts": {
     "prestart": "npm install",
-    "start": "node src/index.js"
+    "start": "nodemon src/index.js"
   }
 }
