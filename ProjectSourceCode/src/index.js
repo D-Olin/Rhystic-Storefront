@@ -2,7 +2,6 @@
 const express = require('express');
 const app = express();
 const path = require('path');
-app.use(express.static('resources'));
 const handlebars = require('express-handlebars');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
@@ -35,6 +34,7 @@ const hbs = handlebars.create({
     })
   );
 
+  app.use('/', express.static(path.join(__dirname, 'resources')));
   
   // -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
 /* const dbConfig = {
