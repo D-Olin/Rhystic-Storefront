@@ -20,7 +20,8 @@
   border-radius: 4px;
   background-color: white;
   background-image: url('../img/search_icon.png');
-  background-position: 10px 10px;
+  background-size: 15px 15px;
+  background-position: 5px 5px;
   background-repeat: no-repeat;
 }
 
