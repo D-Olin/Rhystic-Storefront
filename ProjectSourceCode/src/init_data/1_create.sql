@@ -11,11 +11,11 @@ CREATE TABLE IF NOT EXISTS userinfo (
 DROP TABLE IF EXISTS cardinfo CASCADE;
 CREATE TABLE IF NOT EXISTS cardinfo (
     card_id SERIAL PRIMARY KEY NOT NULL,
-    name VARCHAR(100) NOT NULL,
+    name TEXT NOT NULL,
     description TEXT NOT NULL,
-    image_url VARCHAR(300) NOT NULL,
-    cost VARCHAR(10),
-    rarity VARCHAR(100) NOT NULL CONSTRAINT limited_values CHECK (rarity in ('common', 'uncommon', 'rare', 'mythic'))
+    image_url TEXT NOT NULL,
+    cost TEXT,
+    rarity VARCHAR(100) NOT NULL CONSTRAINT limited_values CHECK (rarity in ('common', 'uncommon', 'rare', 'mythic','special','bonus'))
 );
 
 DROP TABLE IF EXISTS user_to_card CASCADE;
