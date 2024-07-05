@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS userinfo (
     username VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    money int NOT NULL DEFAULT 100
+    money int NOT NULL DEFAULT 100,
+    pfp_url text DEFAULT "/img/profile_circle_icon.png"
 );
 
 DROP TABLE IF EXISTS cardinfo CASCADE;
