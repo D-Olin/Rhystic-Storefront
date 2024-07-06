@@ -36,7 +36,11 @@
   color: gray;
   text-align: center;
 }
-/* #search_button{
-  color: white;
-  background-color: #008CBA;
-} */
+
+#navbar{
+  background-color: #B3CEEA;
+}
+
+#set_name_and_rarity{
+  text-transform: capitalize;
+} 

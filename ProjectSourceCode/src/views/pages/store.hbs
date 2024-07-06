@@ -1,0 +1,53 @@
+<main>
+    <br>
+    <form method="get" action="/store/search">
+        <input type="search" id="main_search" name="q" value="{{search_query}}">
+        <input type="submit" value="Search for Cards" id="main_submit">
+    </form>
+    <br>
+    <div class="container text-center" id="search_results">
+        <div class="row">
+            <div class="col-2">
+                Search filters go here eventually.
+            </div>
+            <div class="col">
+                {{#each json.data}}
+                    {{#if prices.usd}}
+                        <div class="row">
+                            <div class="col">
+                                <img src="{{image_uris.large}}" alt="{{name}}" height=350 width=250></img>
+                            </div>
+                            <div class="col">
+                                <div class="row" id="card_name_and_cost">
+                                    <h3>{{name}}{{#if mana_cost}} — {{mana_cost}}{{/if}}</h3>
+                                </div>
+                                <div class="row" id="set_name_and_rarity">
+                                    {{set_name}} — {{rarity}}
+                                </div>
+                                <div class="row" id="type_line">
+                                    {{#if power}}{{power}}/{{toughness}} {{/if}}{{type_line}}
+                                </div>
+                                <div class="row">
+                                </div>
+                                <div class="row">
+                                    {{oracle_text}}
+                                </div>
+                            </div>
+                            <div class="col-1">
+                                <h2>${{prices.usd}}</h2>
+                            </div>
+                            <div class="col-2">
+                                <form method="post" action="/store/add">
+                                    <input type="hidden" name="multiverse_id" value={{id}}/><br />
+                                    <button type="submit">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                        <br>
+                    {{/if}}
+                {{/each}}
+            </div>
+        {{!-- </table> --}}
+        </div>
+    </div>
+</main>
