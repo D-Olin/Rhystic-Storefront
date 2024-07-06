@@ -81,6 +81,11 @@ app.get('/store/search', (req, res) => {
 
 });
 
+/* app.post('/store/search/add', (req, res) => {
+  
+}); */
+
+
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 
 app.listen(3000);
