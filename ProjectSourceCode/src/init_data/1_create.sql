@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS userinfo (
     username VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    money int NOT NULL DEFAULT 100
+    money int NOT NULL DEFAULT 100,
+    pfp_url text DEFAULT "/img/profile_circle_icon.png"
 );
 
 DROP TABLE IF EXISTS cardinfo CASCADE;
@@ -14,7 +15,8 @@ CREATE TABLE IF NOT EXISTS cardinfo (
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     image_url TEXT NOT NULL,
-    cost TEXT,
+    mana_cost TEXT,
+    price DECIMAL(10,2),
     rarity VARCHAR(100) NOT NULL CONSTRAINT limited_values CHECK (rarity in ('common', 'uncommon', 'rare', 'mythic','special','bonus'))
 );
 
@@ -26,5 +28,4 @@ owned_count INT NOT NULL,
 cart_count INT NOT NULL,
 FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
 FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
-
 );
