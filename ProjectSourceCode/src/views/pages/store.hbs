@@ -1,4 +1,3 @@
-{{!-- TODO: Art on double faced faced cards are broken --}}
 <main>
     <br>
     <form method="get" action="/store/search">
@@ -63,12 +62,32 @@
                     <input type="submit" value="Search with Filters" id="filter_submit">
                 </form>
             </div>
+
             <div class="col">
                 {{#each json.data}}
                     {{#if prices.usd}}
                         <div class="row">
                             <div class="col">
-                                <img src="{{image_uris.large}}" alt="{{name}}" height=350 width=250></img>
+                                
+                                {{#if card_faces}}
+                                    <div class="row">
+                                        
+                                    </div>
+                                    <div class="row">
+                                        <div class="flip-card">
+                                            <div class="flip-card-inner">
+                                                <div class="flip-card-front">
+                                                    <img src="{{card_faces.0.image_uris.large}}" alt="{{card_faces.0.name}}" height=350 width=250></img>
+                                                </div>
+                                                <div class="flip-card-back">
+                                                    <img src="{{card_faces.1.image_uris.large}}" alt="{{card_faces.1.name}}" height=350 width=250></img>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {{else}}
+                                    <img src="{{image_uris.large}}" alt="{{name}}" height=350 width=250></img>
+                                {{/if}}
                             </div>
                             <div class="col">
                                 <div class="row" id="card_name_and_cost">
@@ -78,7 +97,21 @@
                                     <p>{{set_name}} — {{rarity}}</p>
                                 </div>
                                 <div class="row text-center" id="type_line">
-                                    <p>{{#if power}}{{power}}/{{toughness}} {{/if}}{{type_line}}</p>
+                                    <p>{{#if card_faces}}
+                                        {{#if card_faces.0.power}}
+                                            {{card_faces.0.power}}/{{card_faces.0.toughness}} 
+                                        {{/if}}
+                                        {{card_faces.0.type_line}} // 
+                                        {{#if card_faces.1.power}}
+                                            {{card_faces.1.power}}/{{card_faces.1.toughness}} 
+                                        {{/if}}
+                                        {{card_faces.1.type_line}}
+                                    {{else}}
+                                        {{#if power}}
+                                            {{power}}/{{toughness}} 
+                                        {{/if}}
+                                        {{type_line}}
+                                    {{/if}}</p>
                                 </div>
                                 <div class="row">
                                     <p>{{oracle_text}}</p>

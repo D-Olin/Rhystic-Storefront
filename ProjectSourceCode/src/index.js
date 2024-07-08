@@ -75,13 +75,16 @@ app.get('/', (req, res) => {
 
 app.get('/store/search', (req, res) => {
   var search_query = req.query.q;
+  var search_query_no_space = search_query.replaceAll(" ", "-");
+
   var sort_by = req.query.sort_by;
   var sort_dir = req.query.dir;
   if(sort_by != null && sort_dir != null){
-    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query + '+unique:prints+(game:paper)' + '&order=' + sort_by + '&dir=' + sort_dir;
+    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query_no_space + '+unique:prints+(game:paper)' + '&order=' + sort_by + '&dir=' + sort_dir;
   }else{
-    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query + '+unique:prints+(game:paper)';
+    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query_no_space + '+unique:prints+(game:paper)';
   }
+
   console.log(api_call);
 
   const scryfallRes = fetch(api_call, {method: "GET"})
