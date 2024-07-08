@@ -1,3 +1,4 @@
+{{!-- TODO: Art on double faced faced cards are broken --}}
 <main>
     <br>
     <form method="get" action="/store/search">
@@ -7,8 +8,60 @@
     <br>
     <div class="container text-center" id="search_results">
         <div class="row">
-            <div class="col-2">
-                Search filters go here eventually.
+            <div class="col-2 text-start">
+                <form method="get" action="/store/search">
+                    <input type="hidden" name="q" value="{{search_query}}">
+
+                    <h5>Sort By:</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="card_name" value="name" {{#ifEquals sort_by "name"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="card_name">
+                            Card Name
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="price_usd" value="usd" {{#ifEquals sort_by "usd"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="price_usd">
+                            Price (USD)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="release_date" value="released" {{#ifEquals sort_by "released"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="release_date">
+                            Release Date
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="mana_value" value="cmc" {{#ifEquals sort_by "cmc"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="mana_value">
+                            Mana Value
+                        </label>
+                    </div>
+                    <br>
+
+                    <h5>Sort Direction:</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dir" id="default" value="auto" {{#ifEquals sort_dir "auto"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="default">
+                            Default
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dir" id="asc" value="asc" {{#ifEquals sort_dir "asc"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="asc">
+                            Ascending
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dir" id="desc" value="desc" {{#ifEquals sort_dir "desc"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="desc">
+                            Descending
+                        </label>
+                    </div>
+                    <br>
+
+                    <input type="submit" value="Search with Filters" id="filter_submit">
+                </form>
             </div>
             <div class="col">
                 {{#each json.data}}

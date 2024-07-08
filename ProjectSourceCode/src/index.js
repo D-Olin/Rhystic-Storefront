@@ -15,6 +15,9 @@ const hbs = handlebars.create({
     extname: 'hbs',
     layoutsDir: __dirname + '/views/layouts',
     partialsDir: __dirname + '/views/partials',
+    helpers: {
+      ifEquals: function(arg1, arg2, options) { return (arg1 == arg2) ? options.fn(this) : options.inverse(this); }
+    }
   });
   
   // Register `hbs` as our view engine using its bound `engine()` function.
@@ -37,6 +40,7 @@ const hbs = handlebars.create({
   app.use('/', express.static(path.join(__dirname, 'resources')));
   
   // -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
+
 const dbConfig = {
     host: 'db',
     port: 5432,
@@ -58,7 +62,6 @@ db.connect()
   });
 
 
-
 // -------------------------------------  ROUTES for home.hbs   ----------------------------------------------
 
 
@@ -72,12 +75,18 @@ app.get('/', (req, res) => {
 
 app.get('/store/search', (req, res) => {
   var search_query = req.query.q;
-  var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query + '+unique:prints+(game:paper)';
+  var sort_by = req.query.sort_by;
+  var sort_dir = req.query.dir;
+  if(sort_by != null && sort_dir != null){
+    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query + '+unique:prints+(game:paper)' + '&order=' + sort_by + '&dir=' + sort_dir;
+  }else{
+    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query + '+unique:prints+(game:paper)';
+  }
   console.log(api_call);
 
   const scryfallRes = fetch(api_call, {method: "GET"})
     .then((response) => response.json())
-    .then((json) => res.render('pages/store', {json, search_query}));
+    .then((json) => res.render('pages/store', {json, search_query, sort_by, sort_dir}));
 
 });
 
