@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    {{> navbar}}
+    <div class="main-content">
+        <main class="form-container">
+            <h1>Profile</h1>
+            <p><strong>Name:</strong> {{user.name}}</p>
+            <p><strong>Username:</strong> {{user.username}}</p>
+            <p><strong>Email:</strong> {{user.email}}</p>
+            <p><strong>Money:</strong> ${{user.money}}</p>
+            <form action="/logout" method="POST">
+                <input type="submit" value="Logout" class="btn">
+            </form>
+        </main>
+    </div>
+</body>
+</html>

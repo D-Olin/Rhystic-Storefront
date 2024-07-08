@@ -5,12 +5,18 @@ services:
     env_file: .env
     expose:
       - '5432'
+    ports:
+      - '5432:5432'  # Expose port to host for debugging
     volumes:
       - group-project:/var/lib/postgresql/data
       - ./src/init_data:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
   web:
     image: node:lts
-    user: 'node'
+    user: 'root'  # Updated user to root
     working_dir: /home/node/app
     env_file: .env
     environment:
@@ -22,9 +28,5 @@ services:
     volumes:
       - ./:/home/node/app
     command: 'npm start'
-# This defines our volume(s), which will persist throughout startups.
-# If you want to get rid of a hanging volume, e.g. to test your database init,
-# run `docker-compose rm -v`. Note that this will remove ALL of your data, so
-# be extra sure you've made a stable backup somewhere.
 volumes:
   group-project:
