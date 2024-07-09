@@ -61,8 +61,8 @@
 
                     <input type="submit" value="Search with Filters" id="filter_submit">
                 </form>
-            </div>
-
+            </div>          
+            {{#ifNotEquals json.object "error"}}
             <div class="col">
                 {{#each json.data}}
                     {{#if prices.usd}}
@@ -131,6 +131,13 @@
                     {{/if}}
                 {{/each}}
             </div>
+            {{/ifNotEquals}}
+            {{#ifEquals json.object "error"}}
+            <div class="col">
+                <br><br><br>
+                <h2>No matching cards found.</h2>
+            </div>
+            {{/ifEquals}}
         </div>
     </div>
 </main>
