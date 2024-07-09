@@ -38,7 +38,7 @@ app.use(express.static(path.join(__dirname, 'resources')));
 
 // -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || 'db',
     port: process.env.DB_PORT || 5432,
     database: process.env.POSTGRES_DB,
     user: process.env.POSTGRES_USER,
