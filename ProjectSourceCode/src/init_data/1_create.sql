@@ -35,5 +35,6 @@ CREATE TABLE IF NOT EXISTS user_to_card (
     owned_count INT NOT NULL,
     cart_count INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
+    FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE,
+    FOREIGN KEY (trade_id) REFERENCES trade (trade_id) ON DELETE CASCADE
 );
