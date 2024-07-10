@@ -1,0 +1,143 @@
+<main>
+    <br>
+    <form method="get" action="/store/search">
+        <input type="search" id="main_search" name="q" value="{{search_query}}">
+        <input type="submit" value="Search for Cards" id="main_submit">
+    </form>
+    <br>
+    <div class="container text-center" id="search_results">
+        <div class="row">
+            <div class="col-2 text-start">
+                <form method="get" action="/store/search">
+                    <input type="hidden" name="q" value="{{search_query}}">
+
+                    <h5>Sort By:</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="card_name" value="name" {{#ifEquals sort_by "name"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="card_name">
+                            Card Name
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="price_usd" value="usd" {{#ifEquals sort_by "usd"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="price_usd">
+                            Price (USD)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="release_date" value="released" {{#ifEquals sort_by "released"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="release_date">
+                            Release Date
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sort_by" id="mana_value" value="cmc" {{#ifEquals sort_by "cmc"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="mana_value">
+                            Mana Value
+                        </label>
+                    </div>
+                    <br>
+
+                    <h5>Sort Direction:</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dir" id="default" value="auto" {{#ifEquals sort_dir "auto"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="default">
+                            Default
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dir" id="asc" value="asc" {{#ifEquals sort_dir "asc"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="asc">
+                            Ascending
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="dir" id="desc" value="desc" {{#ifEquals sort_dir "desc"}}checked{{/ifEquals}}>
+                        <label class="form-check-label" for="desc">
+                            Descending
+                        </label>
+                    </div>
+                    <br>
+
+                    <input type="submit" value="Search with Filters" id="filter_submit">
+                </form>
+            </div>          
+            {{#ifNotEquals json.object "error"}}
+            <div class="col">
+                {{#each json.data}}
+                    {{#if prices.usd}}
+                        <div class="row">
+                            <div class="col">
+                                
+                                {{#if card_faces}}
+                                    <div class="row">
+                                        
+                                    </div>
+                                    <div class="row">
+                                        <div class="flip-card">
+                                            <div class="flip-card-inner">
+                                                <div class="flip-card-front">
+                                                    <img src="{{card_faces.0.image_uris.large}}" alt="{{card_faces.0.name}}" height=350 width=250></img>
+                                                </div>
+                                                <div class="flip-card-back">
+                                                    <img src="{{card_faces.1.image_uris.large}}" alt="{{card_faces.1.name}}" height=350 width=250></img>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {{else}}
+                                    <img src="{{image_uris.large}}" alt="{{name}}" height=350 width=250></img>
+                                {{/if}}
+                            </div>
+                            <div class="col">
+                                <div class="row" id="card_name_and_cost">
+                                    <h3>{{name}}{{#if mana_cost}} — {{mana_cost}}{{/if}}</h3>
+                                </div>
+                                <div class="row text-center" id="set_name_and_rarity">
+                                    <p>{{set_name}} — {{rarity}}</p>
+                                </div>
+                                <div class="row text-center" id="type_line">
+                                    <p>{{#if card_faces}}
+                                        {{#if card_faces.0.power}}
+                                            {{card_faces.0.power}}/{{card_faces.0.toughness}} 
+                                        {{/if}}
+                                        {{card_faces.0.type_line}} // 
+                                        {{#if card_faces.1.power}}
+                                            {{card_faces.1.power}}/{{card_faces.1.toughness}} 
+                                        {{/if}}
+                                        {{card_faces.1.type_line}}
+                                    {{else}}
+                                        {{#if power}}
+                                            {{power}}/{{toughness}} 
+                                        {{/if}}
+                                        {{type_line}}
+                                    {{/if}}</p>
+                                </div>
+                                <div class="row">
+                                    <p>{{oracle_text}}</p>
+                                </div>
+                            </div>
+                            <div class="col-1">
+                                <h2>${{prices.usd}}</h2>
+                            </div>
+                            <div class="col-2">
+                                <form method="post" action="/store/search/add">
+                                    <input type="hidden" name="card_id" value={{id}}/><br />
+                                    <button type="submit">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                        <br>
+                    {{/if}}
+                {{/each}}
+            </div>
+            {{/ifNotEquals}}
+            {{#ifEquals json.object "error"}}
+            <div class="col">
+                <br><br><br>
+                <h2>No matching cards found.</h2>
+            </div>
+            {{/ifEquals}}
+        </div>
+    </div>
+</main>
