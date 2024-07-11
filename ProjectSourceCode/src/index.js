@@ -79,13 +79,6 @@ app.get('/signup', (req, res) => {
     res.render('pages/signup');
 });
 
-// Serve profile page
-app.get('/profile', (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
-    }
-    res.render('pages/profile', { user: req.session.user });
-});
 
 // Handle user registration
 app.post('/signup', async (req, res) => {
@@ -135,6 +128,26 @@ app.post('/logout', (req, res) => {
         res.redirect('/');
     });
 });
+
+// -------------------------------------  ROUTES for profile.hbs   ----------------------------------------------
+app.get('/profile', (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    db.any('SELECT * FROM cardinfo ci JOIN user_to_card utc ON ci.card_id = utc.card_id WHERE utc.user_id = $1', [req.session.user.user_id])
+    .then(cards => {
+        // console.log(cards) //testing log 
+        res.render('pages/profile', {
+            user: req.session.user,
+            card: cards
+        });
+    })
+    .catch(err => {
+        console.log(err);
+    });
+});
+
+
 
 // -------------------------------------  ROUTES for store.hbs   ----------------------------------------------
 

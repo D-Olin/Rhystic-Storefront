@@ -163,3 +163,9 @@ input[type="submit"]:hover {
 .flip-card-back {
   transform: rotateY(180deg);
 }
+
+/* css for profile/inventory page */
+
+.imgcol{
+  width: 300px;
+}

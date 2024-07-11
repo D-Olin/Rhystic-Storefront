@@ -1,18 +1,14 @@
-<div class = "row" style="background-color: lightgray;">
-        <div class="col">
-            <img src="/img/profile_circle_icon.png" width="60%">
-        </div>
-    </div>
-    <div class = "row" style="background-color: lightgray;">
-        <div class="col" style="font-size: xx-large;">
-            <p>Placeholder Name</p>
-            <p>{{reg.user.name}}</p>  {{!-- need to alter this path once the routes for login are finished --}}
-            <p>Placeholder Email</p>
-        </div>
-    </div>
-    <div class = "row" style="background-color: lightgray;">
-        <div class="col">
-            <p>money!!!: {{reg.user.money}}</p> {{!-- need to alter this path once the routes for login are finished --}}
-            <p>Cards Held: </p> {{!-- count all cards user has and put here--}}
-        </div>
-    </div>
+<div class="col-2" style="position: sticky;">
+    <main class="form-container">
+        <h1>Profile</h1>
+        <img src={{user.pfp_url}} style="width: inherit;" >
+        <p></p>
+        <p><strong>Name:</strong> {{user.name}}</p>
+        <p><strong>Username:</strong> {{user.username}}</p>
+        <p><strong>Email:</strong> {{user.email}}</p>
+        <p><strong>Money:</strong> ${{user.money}}</p>
+        <form action="/logout" method="POST">
+            <input type="submit" value="Logout" class="btn">
+        </form>
+    </main>
+</div>
