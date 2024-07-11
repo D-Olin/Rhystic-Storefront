@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS userinfo (
     password VARCHAR(100) NOT NULL,
     money int NOT NULL DEFAULT 100,
     pfp_url text DEFAULT '/img/profile_circle_icon.png',
-    cart text[][]--json obj of trade ids
+    cart text[][] DEFAULT [] --json obj of trade ids [[id,count],[id,count]]
 );
 
 DROP TABLE IF EXISTS cardinfo CASCADE;
