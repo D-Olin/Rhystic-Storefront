@@ -1,0 +1,56 @@
+{{!-- layouts/main.hbs --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade Cards</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  {{{ body }}}
+</body>
+</html>
+
+{{!-- pages/trade.hbs --}}
+{{!-- Trade Page --}}
+{{#extends 'layouts/main'}}
+{{#block 'content'}}
+<h1>Trade Cards</h1>
+
+<h2>Create a Trade</h2>
+<form action="/trade/create" method="POST">
+  <label for="card_id">Card ID:</label>
+  <input type="text" id="card_id" name="card_id" required><br>
+  
+  <label for="trade_quantity">Quantity:</label>
+  <input type="number" id="trade_quantity" name="trade_quantity" required><br>
+  
+  <label for="trade_price">Price:</label>
+  <input type="number" step="0.01" id="trade_price" name="trade_price" required><br>
+  
+  <button type="submit">Create Trade</button>
+</form>
+
+<h2>Available Trades</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Card Name</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Seller</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each trades}}
+    <tr>
+      <td>{{this.card_name}}</td>
+      <td>{{this.trade_quantity}}</td>
+      <td>{{this.trade_price}}</td>
+      <td>{{this.seller_name}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{/block}}
