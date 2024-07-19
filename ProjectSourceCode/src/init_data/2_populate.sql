@@ -2,7 +2,7 @@ INSERT INTO userinfo
     (name,username,email,password,pfp_url)
 VALUES
     ('John Doe','jDoe','john.doe@email.com','$2b$10$Tru9/A34miRCbbY8YsnXH.EoHnj65H//COw6dr5qMDCAWunralPWm','https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.pinimg.com%2Foriginals%2F68%2F0e%2F24%2F680e241336ae8d3a57a42f54b656e58f.jpg&f=1&nofb=1&ipt=189ee3c805d95be9cf92baaa023f3ab79e5a71a7a12b5091be3b8731696356c3&ipo=images'),
-    ('Jane Doe','janeD','jane.doe@email.com','password',NULL,[[1,1]]);
+    ('Jane Doe','janeD','jane.doe@email.com','password',NULL);
 
 
 INSERT INTO cardinfo

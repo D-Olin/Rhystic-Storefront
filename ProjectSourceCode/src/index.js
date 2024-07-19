@@ -63,14 +63,39 @@ db.connect()
     });
 
 // -------------------------------------  ROUTES for home.hbs   ----------------------------------------------
+
 app.get('/', (req, res) => {
     res.render('pages/home');
 });
+
+// -------------------------------------  ROUTES for login.hbs   ----------------------------------------------
 
 // Serve login page
 app.get('/login', (req, res) => {
     res.render('pages/login');
 });
+
+// Handle user login
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const user = await db.one('SELECT * FROM userinfo WHERE username = $1', [username]);
+
+        if (user && await bcrypt.compare(password, user.password)) {
+            req.session.user = user;
+            res.redirect('/profile');
+        } else {
+            res.redirect('/login');
+        }
+    } catch (err) {
+        console.error('Error logging in user:', err);
+        res.status(401).send({error: 'Error logging in user'});
+        //res.redirect('/login');
+    }
+});
+
+// -------------------------------------  ROUTES for signup.hbs   ----------------------------------------------
 
 // Serve signup page
 app.get('/signup', (req, res) => {
@@ -92,28 +117,13 @@ app.post('/signup', async (req, res) => {
         res.redirect('/login');
     } catch (err) {
         console.error('Error inserting user:', err);
-        res.redirect('/signup');
+        res.status(400).send({error: 'Error inserting user'});
+        //res.status(400).redirect('/signup');
     }
 });
 
-// Handle user login
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
 
-    try {
-        const user = await db.oneOrNone('SELECT * FROM userinfo WHERE username = $1', [username]);
-
-        if (user && await bcrypt.compare(password, user.password)) {
-            req.session.user = user;
-            res.redirect('/profile');
-        } else {
-            res.redirect('/login');
-        }
-    } catch (err) {
-        console.error('Error logging in user:', err);
-        res.redirect('/login');
-    }
-});
+// -------------------------------------  ROUTES for logout.hbs   ----------------------------------------------
 
 // Handle user logout
 app.post('/logout', (req, res) => {
@@ -170,4 +180,4 @@ app.get('/welcome', (req, res) => {
 });
 
 // Export the app for testing purposes
-module.exports = app;
+module.exports = {app, db};
