@@ -1,4 +1,5 @@
-// ----------------------------------   DEPENDENCIES  ----------------------------------------------
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -6,17 +7,18 @@ const handlebars = require('express-handlebars');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const bcrypt = require('bcrypt');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
     extname: 'hbs',
-    layoutsDir: path.join(__dirname, 'views', 'layouts'),
-    partialsDir: path.join(__dirname, 'views', 'partials'),
+    layoutsDir: path.join(__dirname, 'views/layouts'),
+    partialsDir: path.join(__dirname, 'views/partials'),
     helpers: {
-      ifEquals: function(arg1, arg2, options) { return (arg1 == arg2) ? options.fn(this) : options.inverse(this); },
-      ifNotEquals: function(arg1, arg2, options) { return (arg1 != arg2) ? options.fn(this) : options.inverse(this); }
+        ifEquals: function(arg1, arg2, options) { return (arg1 == arg2) ? options.fn(this) : options.inverse(this); },
+        ifNotEquals: function(arg1, arg2, options) { return (arg1 != arg2) ? options.fn(this) : options.inverse(this); }
     }
 });
 
@@ -25,47 +27,46 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // set Session
 app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-  })
-);
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
+    session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+    })
 );
 
 app.use('/', express.static(path.join(__dirname, 'resources')));
 
 // -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
-
 const dbConfig = {
-    host: 'db',
-    port: 5432,
+    host: process.env.DB_HOST || 'db',
+    port: process.env.DB_PORT || 5432,
     database: process.env.POSTGRES_DB,
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
 };
+console.log('Database configuration:', dbConfig);
 const db = pgp(dbConfig);
 
 // db test
 db.connect()
-  .then(obj => {
-    console.log('Database connection successful');
-    obj.done(); // success, release the connection;
-  })
-  .catch(error => {
-    console.log('ERROR', error.message || error);
-  });
+    .then(obj => {
+        // Can check the server version here (pg-promise v10.1.0+):
+        console.log('Database connection successful');
+        obj.done(); // success, release the connection;
+    })
+    .catch(error => {
+        console.log('ERROR', error.message || error);
+    });
 
 // -------------------------------------  ROUTES for home.hbs   ----------------------------------------------
 
 app.get('/', (req, res) => {
-  res.render('pages/home');
+    res.render('pages/home');
 });
-
 
 // -------------------------------------  ROUTES for login.hbs   ----------------------------------------------
 
@@ -82,10 +83,7 @@ app.post('/login', async (req, res) => {
         const user = await db.one('SELECT * FROM userinfo WHERE username = $1', [username]);
 
         if (user && await bcrypt.compare(password, user.password)) {
-            req.session.userId = user.user_id; // Set user ID in session
-            req.session.username = user.username; // Set user username in session
-            req.session.email = user.email; // Set user email in session
-
+            req.session.user = user;
             res.redirect('/profile');
         } else {
             res.redirect('/login');
@@ -111,15 +109,10 @@ app.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        const newUser = await db.none(
-            `INSERT INTO userinfo (name, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *;`,
+        await db.none(
+            'INSERT INTO userinfo (name, username, email, password) VALUES ($1, $2, $3, $4)',
             [name, username, email, hashedPassword]
         );
-
-        req.session.userId = newUser.user_id; // Set user ID in session
-        req.session.username = newUser.username; // Set user username in session
-        req.session.email = newUser.email; // Set user email in session
-
         console.log('User successfully inserted');
         res.redirect('/login');
     } catch (err) {
@@ -160,35 +153,25 @@ app.get('/profile', (req, res) => {
         });
 });
 
-// -------------------------------------  Auth Middleware   ---------------------------------------
-
-// Middleware to check if the user is logged in
-function isLoggedIn(req, res, next) {
-    if (!req.session.userId) {
-        return res.status(401).send("You are not logged in");
-    }
-    next();
-}
-
 // -------------------------------------  ROUTES for store.hbs   ----------------------------------------------
-
 app.get('/store/search', (req, res) => {
-  var search_query = req.query.q;
-  var search_query_no_space = search_query.replaceAll(" ", "-");
+    var search_query = req.query.q;
+    var search_query_no_space = search_query.replaceAll(" ", "-");
 
-  var sort_by = req.query.sort_by;
-  var sort_dir = req.query.dir;
-  if (sort_by != null && sort_dir != null) {
-    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query_no_space + '+unique:prints+(game:paper)' + '&order=' + sort_by + '&dir=' + sort_dir;
-  } else {
-    var api_call = 'https://api.scryfall.com/cards/search?q=' + search_query_no_space + '+unique:prints+(game:paper)';
-  }
+    var sort_by = req.query.sort_by;
+    var sort_dir = req.query.dir;
+    var api_call;
+    if (sort_by != null && sort_dir != null) {
+        api_call = 'https://api.scryfall.com/cards/search?q=' + search_query_no_space + '+unique:prints+(game:paper)' + '&order=' + sort_by + '&dir=' + sort_dir;
+    } else {
+        api_call = 'https://api.scryfall.com/cards/search?q=' + search_query_no_space + '+unique:prints+(game:paper)';
+    }
 
-  console.log(api_call);
+    console.log(api_call);
 
-  fetch(api_call, { method: "GET" })
-    .then((response) => response.json())
-    .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir }));
+    fetch(api_call, { method: "GET" })
+        .then((response) => response.json())
+        .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir }));
 });
 
 // -------------------------------------  ROUTES for trade.hbs   ----------------------------------------------
@@ -230,7 +213,10 @@ app.post('/trade/create', isLoggedIn, (req, res) => {
     });
 });
 
-// -------------------------------------  START THE SERVER   ----------------------------------------------
+// -------------------------------------  ADDITIONAL ROUTES   ----------------------------------------------
+app.get('/welcome', (req, res) => {
+    res.json({ status: 'success', message: 'Welcome!' });
+});
 
-app.listen(3000);
-console.log('Server is listening on port 3000');
+// Export the app for testing purposes
+module.exports = {app, db};
