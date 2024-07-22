@@ -138,44 +138,46 @@ app.post('/logout', (req, res) => {
 });
 
 // -------------------------------------  ROUTES for profile.hbs   ----------------------------------------------
-app.get('/profile', (req, res) => {
+app.get('/profile', async(req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
     }
-    db.any('SELECT * FROM cardinfo ci JOIN user_to_card utc ON ci.card_id = utc.card_id WHERE utc.user_id = $1', [req.session.user.user_id])
-    .then(cards => {
-        // console.log(cards) //testing log 
+    try{
+        const cards = await db.any('SELECT * FROM cardinfo ci JOIN user_to_card utc ON ci.card_id = utc.card_id WHERE utc.user_id = $1', [req.session.user.user_id]);
+        const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
         res.render('pages/profile', {
-            user: req.session.user,
+            user,
             card: cards
         });
         console.log(req.session.user)
-    })
-    .catch(err => {
+        console.log(user)
+    }
+    catch(err){
         console.log(err);
-    });
+    };
 });
+
 
 
 
 // -------------------------------------  ROUTES for cart.hbs   ----------------------------------------------
 
-app.get('/cart',(req,res)=> {
+app.get('/cart',async(req,res)=> {
     if (!req.session.user) {
         return res.redirect('/login');
     }
-    db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id WHERE trade_id IN (SELECT unnest(cart) FROM userinfo ui WHERE ui.user_id = $1)', [req.session.user.user_id])
-    .then(cards => {
-        // console.log(cards) //testing log 
+    try{
+        const cards = await db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id WHERE trade_id IN (SELECT unnest(cart) FROM userinfo ui WHERE ui.user_id = $1)', [req.session.user.user_id]);
+        const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
+
         res.render('pages/cart', {
-            user: req.session.user,
-            cards
+            user,
+            card:cards
         });
-        // console.log(req.session.user)
-    })
-    .catch(err => {
+    }
+    catch(err) {
         console.log(err);
-    });
+    };
 });
 
 app.post('/cart/remove', async (req,res)=>{
