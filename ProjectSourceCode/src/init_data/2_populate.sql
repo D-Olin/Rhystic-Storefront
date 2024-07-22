@@ -26,4 +26,9 @@ VALUES
 INSERT INTO user_to_trade
     (seller_id,trade_id)
 VALUES 
-    (1,1)
+    (1,1);
+
+INSERT INTO cart
+    (count, trade_id, user_id)
+VALUES
+    (1,1,2);

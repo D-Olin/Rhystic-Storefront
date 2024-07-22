@@ -5,19 +5,19 @@
                 <a class="nav-link" href="/">Home</a>
             </li>
         </ul>
-        <form class="d-flex" role="search">
-            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-primary" type="submit" id="search_button">Search</button>
-        </form>
         <ul class="nav-item dropdown">
             <button class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src={{user.pfp_url}} width="35" height="35" id="dropdown_icon" style="border-radius: 50;">
+                <img {{#if user}}src={{user.pfp_url}}{{else}}src='/img/profile_circle_icon.png'{{/if}} width="35" height="35" id="dropdown_icon" style="border-radius: 50;">
                 <span class="caret"></span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                {{#if user.name}}
+                {{#if user}}
                     <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                    <li><form action="/logout" method="POST"></form><a class='dropdown-item' href="/login">Log Out</a></form></li>
+                    <li><a class="dropdown-item" href="/trade">Trading</a></li>
+                    <div class="dropdown-divider"></div>
+                    <div class="container-fluid p-2">
+                        <li><form action="/logout" method="POST"><input type="submit" value="Logout" class="btn"></form></li>
+                    </div>
                 {{else}}
                     <li><a class="dropdown-item" href="/login">Login/Register</a></li>
                 {{/if}}

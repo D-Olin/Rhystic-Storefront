@@ -8,6 +8,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const axios = require('axios');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -65,14 +66,14 @@ db.connect()
 // -------------------------------------  ROUTES for home.hbs   ----------------------------------------------
 
 app.get('/', (req, res) => {
-    res.render('pages/home');
+    res.render('pages/home', {user: req.session.user});
 });
 
 // -------------------------------------  ROUTES for login.hbs   ----------------------------------------------
 
 // Serve login page
 app.get('/login', (req, res) => {
-    res.render('pages/login');
+    res.render('pages/login', {user: req.session.user});
 });
 
 // Handle user login
@@ -82,7 +83,7 @@ app.post('/login', async (req, res) => {
     try {
         const user = await db.one('SELECT * FROM userinfo WHERE username = $1', [username]);
 
-        if (user && await bcrypt.compare(password, user.password)) {
+        if (user && (await bcrypt.compare(password, user.password))) {
             req.session.user = user;
             res.redirect('/profile');
         } else {
@@ -99,7 +100,7 @@ app.post('/login', async (req, res) => {
 
 // Serve signup page
 app.get('/signup', (req, res) => {
-    res.render('pages/signup');
+    res.render('pages/signup', {user: req.session.user});
 });
 
 // Handle user registration
@@ -109,10 +110,13 @@ app.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        await db.none(
-            'INSERT INTO userinfo (name, username, email, password) VALUES ($1, $2, $3, $4)',
+        const user = await db.any(
+            `INSERT INTO userinfo (name, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *;`,
             [name, username, email, hashedPassword]
         );
+        
+        req.session.user = user;
+
         console.log('User successfully inserted');
         res.redirect('/login');
     } catch (err) {
@@ -136,11 +140,19 @@ app.post('/logout', (req, res) => {
     });
 });
 
-// -------------------------------------  ROUTES for profile.hbs   ----------------------------------------------
-app.get('/profile', (req, res) => {
+// -------------------------------------  Auth Middleware   ---------------------------------------
+
+// Middleware to check if the user is logged in
+function isLoggedIn(req, res, next) {
     if (!req.session.user) {
-        return res.redirect('/login');
+      return res.status(401).send("You are not logged in");
     }
+    next();
+}
+  
+
+// -------------------------------------  ROUTES for profile.hbs   ----------------------------------------------
+app.get('/profile', isLoggedIn, (req, res) => {
     db.any('SELECT * FROM cardinfo ci JOIN user_to_card utc ON ci.card_id = utc.card_id WHERE utc.user_id = $1', [req.session.user.user_id])
         .then(cards => {
             res.render('pages/profile', {
@@ -171,7 +183,11 @@ app.get('/store/search', (req, res) => {
 
     fetch(api_call, { method: "GET" })
         .then((response) => response.json())
-        .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir }));
+        .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir, user: req.session.user}));
+});
+
+app.post('/store/search/add', isLoggedIn, (req, res) => {
+    
 });
 
 // -------------------------------------  ROUTES for trade.hbs   ----------------------------------------------
@@ -184,7 +200,7 @@ app.get('/trade', isLoggedIn, (req, res) => {
     JOIN user_to_trade ON trade.trade_id = user_to_trade.trade_id 
     JOIN userinfo ON user_to_trade.seller_id = userinfo.user_id;`)
     .then(trades => {
-      res.render('pages/trade', { trades });
+      res.render('pages/trade', { trades, user: req.session.user });
     })
     .catch(error => {
       console.log(error);
@@ -193,9 +209,50 @@ app.get('/trade', isLoggedIn, (req, res) => {
 });
 
 // Route to create a new trade
-app.post('/trade/create', isLoggedIn, (req, res) => {
-  const { card_id, trade_quantity, trade_price } = req.body;
-  const seller_id = req.session.userId; // Assuming you have user session setup
+app.post('/trade/create', isLoggedIn, async (req, res) => {
+    //TODO: Select cards from inventory instead of searching by card id
+  var card_id, card_name, card_price;
+    await axios({
+        url: `https://api.scryfall.com/cards/named`,
+        method: 'GET',
+        dataType: 'json',
+        params: {
+          fuzzy: req.body.card_name
+        },
+      })
+        .then(card => {
+          console.log(card.data);
+          card_id = card.data.id;
+          card_name = card.data.name;
+          card_price = card.data.prices.usd;
+          console.log(card_id);
+        })
+        .catch(error => {
+          console.error(error);
+          return res.status(401).send("Error querying for card.");
+        });
+        
+    console.log('Card ID:');
+    console.log(card_id);
+    if(card_id == null){
+        return res.status(401).send("Could not find queried card.");
+    }
+  const { trade_quantity, trade_price } = req.body;
+  const seller_id = req.session.user.user_id; // Assuming you have user session setup
+
+  const card_in_db_query = `SELECT * FROM cardinfo WHERE card_id = $1 LIMIT 1;`; 
+  const card_in_db = await db.oneOrNone(card_in_db_query, [card_id]);
+  if(card_in_db == null){
+    const insert_card_query = `INSERT INTO cardinfo (card_id, card_name, price) VALUES ($1, $2, $3) RETURNING *;`;
+    await db.one(insert_card_query, [card_id, card_name, card_price])
+        .then(card => {
+            console.log(card);
+        })
+        .catch(error => {
+            console.error(error);
+            return res.status(401).send("Could not insert card into database.");
+        });
+  }
 
   db.tx(t => {
     return t.one('INSERT INTO trade(card_id, trade_quantity, trade_price) VALUES($1, $2, $3) RETURNING trade_id', [card_id, trade_quantity, trade_price])
@@ -217,6 +274,10 @@ app.post('/trade/create', isLoggedIn, (req, res) => {
 app.get('/welcome', (req, res) => {
     res.json({ status: 'success', message: 'Welcome!' });
 });
+
+app.listen(3000, () => {
+    console.log("Server is running on port 3000");
+  });
 
 // Export the app for testing purposes
 module.exports = {app, db};

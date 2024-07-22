@@ -53,14 +53,7 @@ describe('Server!', () => {
   // Sample test case given to test / endpoint
   it('Returns the default welcome message', done => {
 
-    /* await agent
-        .post('/login')
-        .send({name:'test', username: 'testuser', email:'test@test.com', password: 'testpwd'})
-        .then(res => {
-          expect(res).to.have.status(200); // Check if the status code is 200
-
-      return  */chai
-      .request(app)
+    agent
       .get('/welcome')
       .end((err, res) => {
         expect(res).to.have.status(200);
@@ -77,8 +70,7 @@ describe('Server!', () => {
 describe('Testing Register API', async() => {
   // Positive Test Case: Valid user registration
   it('Positive: /signup', done => {
-    chai
-      .request(app)
+    agent
       .post('/signup')
       .send({ name: 'John Doe', username: 'johndoe', email: 'john@example.com', password: 'password123' })
       .end((err, res) => {
@@ -90,8 +82,7 @@ describe('Testing Register API', async() => {
 
   //  Invalid user registration (missing password)
   it('Negative: /signup', done => {
-    chai
-      .request(app)
+    agent
       .post('/signup')
       .send({ username: 'janedoe', email: 'jane@example.com', password: 'password123'})
       .end((err, res) => {
@@ -110,8 +101,7 @@ describe('Testing Register API', async() => {
 describe('Testing Login API', () => {
   // Positive Test Case: Valid user login
   it('Positive: /login', done => {
-    chai
-      .request(app)
+    agent
       .post('/login')
       .send({ username: 'testuser', password: 'testpwd' })
       .end((err, res) => {
@@ -123,8 +113,7 @@ describe('Testing Login API', () => {
 
   // Negative Test Case: User not in database
   it('Negative, not in database: /login', done => {
-    chai
-      .request(app)
+    agent
       .post('/login')
       .send({ username: 'wronguser', password: 'testpwd' })
       .end((err, res) => {
@@ -136,8 +125,7 @@ describe('Testing Login API', () => {
 
   // Negative Test Case: Invalid user login (no name)
   it('Negative, invalid input: /login', done => {
-    chai
-      .request(app)
+    agent
       .post('/login')
       .send({ username: null, password: 'testpwd' })
       .end((err, res) => {
