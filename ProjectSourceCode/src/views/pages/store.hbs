@@ -122,8 +122,16 @@
                             </div>
                             <div class="col-2">
                                 <form method="post" action="/store/search/add">
-                                    <input type="hidden" name="card_id" value={{id}}/><br />
-                                    <button type="submit">Add to Cart</button>
+                                    <input type="hidden" name="card_id" value='{{id}}' />
+                                    <input type="hidden" name="card_name" value='{{name}}' />
+                                    <input type="hidden" name="description" value='{{oracle_text}}' />
+                                    <input type="hidden" name="image_url" value='{{image_uris.normal}}' />
+                                    <input type="hidden" name="mana_cost" value='{{mana_cost}}' />
+                                    <input type="hidden" name="price" value='{{prices.usd}}' />
+                                    <input type="hidden" name="rarity" value='{{rarity}}' />
+                                    <input type="hidden" name="user_id" value='{{../user.user_id}}' />
+                                    <br />
+                                    <button type="submit" >Add to Cart</button>
                                 </form>
                             </div>
                         </div>
