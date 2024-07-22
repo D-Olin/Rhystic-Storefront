@@ -1,34 +1,31 @@
 <div class="container-fluid text-center">
 <div class="row">
     {{>user_profile}}
-    <div class="col" style="background-color:lightblue;">
+    <div class="col">
             {{#each card}}
                 <table>
-                    <tr style="background-color:red;">
+                    <tr>
                         <td style="width: inherit;">
                             <img src={{image_url}} height=350 width=250>
                         </td>
-                        <td style="background-color: aquamarine;">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <h3>{{card_name}} — {{mana_cost}}</h3>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h4>Quantity: {{owned_count}}</h4>
-                                    </td>
-                                    <td>
-                                        <h4>Cost: ${{price}}</h4>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <p>{{description}}</p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td style="width: 100%;" class="">
+                            <div class="col" style="text-align:left">
+                                <div class="row">
+                                    <h3>{{card_name}} — {{mana_cost}}</h3>
+                                </div>
+                                <div class="row">
+                                    <div></div>
+                                    <div>
+                                        <p>Quantity: {{owned_count}}</p>
+                                        <p>Cost per Card: ${{price}}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div>
+                                        <h5>Description: {{description}}</h5>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </div>
                 </table>
