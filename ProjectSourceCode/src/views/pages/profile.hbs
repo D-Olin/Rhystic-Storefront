@@ -17,9 +17,10 @@
             <div class="form-container" id="settingsPartial" style="display: block;">
                 <h1>Settings</h1>
                 <form action="/profile/edit" method="POST">
-                    <input type="text" name='pfp_url' value={{pfp_url}} />
-                    <input type="text" name="name" value={{name}} />
-                    <input type="text" name="username" value={{username}} />
+                    <input type="text" name="name" value='{{user.name}}' />
+                    <input type="text" name="username" value={{user.username}} />
+                    <input type="text" name='pfp_url' value={{user.pfp_url}} />
+                    <input type="hidden" name="user_id" value={{user.user_id}} />
                     <input type="submit" value="Submit" class="btn">
                 </form>
             </div>

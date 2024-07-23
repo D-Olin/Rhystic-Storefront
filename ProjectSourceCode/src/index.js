@@ -92,7 +92,7 @@ app.post('/login', async (req, res) => {
 
         if (user && (await bcrypt.compare(password, user.password))) {
             req.session.user = user;
-            res.redirect('/profile');
+            res.redirect('/');
         } else {
             res.redirect('/login');
         }
@@ -153,25 +153,47 @@ app.post('/logout', (req, res) => {
 // Middleware to check if the user is logged in
 function isLoggedIn(req, res, next) {
     if (!req.session.user) {
-      return res.status(401).send("You are not logged in");
+        // res.status(401).send("You are not logged in");
+        return res.redirect('/login')
     }
     next();
 }
-  
+
 
 // -------------------------------------  ROUTES for profile.hbs   ----------------------------------------------
-app.get('/profile', isLoggedIn, (req, res) => {
-    db.any('SELECT * FROM cardinfo ci JOIN user_to_card utc ON ci.card_id = utc.card_id WHERE utc.user_id = $1', [req.session.user.user_id])
-        .then(cards => {
-            res.render('pages/profile', {
-                user: req.session.user,
-                card: cards
-            });
-        })
-        .catch(err => {
-            console.log(err);
+app.get('/profile', isLoggedIn, async(req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    try{
+        const card = await db.any('SELECT * FROM cardinfo ci JOIN user_to_card utc ON ci.card_id = utc.card_id WHERE utc.user_id = $1', [req.session.user.user_id]);
+        const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
+        res.render('pages/profile', {
+            user,
+            card
         });
+        console.log(req.session.user)
+        console.log(user)
+    }
+    catch(err){
+        console.log(err);
+    };
 });
+
+app.post('/profile/edit', isLoggedIn, async(req,res) => {
+    const{name,username,pfp_url,user_id} = req.body;
+    try{
+        await db.oneOrNone('UPDATE userinfo SET pfp_url = $3, name = $1, username = $2 WHERE user_id = $4',[name,username,pfp_url,user_id])
+        console.log('User Update Successful')
+    }
+    catch(err){
+        console.log(err)
+    }
+    return res.redirect('/profile')
+});
+
+
+
 
 app.post('/profile/add_card', isLoggedIn, async (req, res) => {
     var card_id, card_name, description, image_url, mana_cost, card_price, rarity;
@@ -253,7 +275,7 @@ app.get('/cart', isLoggedIn, async(req,res)=> {
         return res.redirect('/login');
     }
     try{
-        const cards = await db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id WHERE trade_id IN (SELECT unnest(cart) FROM userinfo ui WHERE ui.user_id = $1)', [req.session.user.user_id]);
+        const cards = await db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id JOIN cart c ON t.trade_id = c.trade_id WHERE c.user_id = $1', [req.session.user.user_id]);
         const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
 
         res.render('pages/cart', {
@@ -269,8 +291,8 @@ app.get('/cart', isLoggedIn, async(req,res)=> {
 app.post('/cart/remove', async (req,res)=>{
     const{user_id,trade_id}=req.body
     try{
-        await db.oneOrNone('UPDATE userinfo SET cart=array_remove(cart, $1) WHERE user_id = $2;',[trade_id,user_id]);
-        await db.oneOrNone('DELETE FROM trade WHERE trade_id = $1',[trade_id]);
+        await db.oneOrNone('DELETE FROM cart WHERE trade_id=$1 AND user_id = $2; DELETE FROM trade WHERE trade_id = $1;',[trade_id,user_id]);
+        console.log('Card Removal Successful')
     }
     catch (err) {
         console.log(err)
@@ -282,8 +304,9 @@ app.post('/cart/buy', async(req,res)=>{
     const{totalPrice,user_id,trade_id,card_id,trade_quantity}=req.body
     try{
         await db.oneOrNone('INSERT INTO user_to_card (user_id,card_id,owned_count) VALUES ($1,$2,$4) ON CONFLICT (user_id,card_id) DO UPDATE SET owned_count= user_to_card.owned_count+$4::INT  WHERE (user_to_card.user_id=$1) AND (user_to_card.card_id=$2)',[user_id,card_id,trade_id,trade_quantity]);
-        await db.oneOrNone('DELETE FROM trade WHERE trade_id = $1',[trade_id]);
-        await db.oneOrNone('UPDATE userinfo SET cart=array_remove(cart, $1), money=userinfo.money-$3::DECIMAL WHERE user_id = $2;',[trade_id,user_id,totalPrice]);
+        await db.oneOrNone('DELETE FROM cart WHERE trade_id=$1 AND user_id = $2; DELETE FROM trade WHERE trade_id = $1;',[trade_id,user_id]);
+        await db.oneOrNone('UPDATE userinfo SET money=userinfo.money-$3::DECIMAL WHERE user_id = $2;',[trade_id,user_id,totalPrice]);
+        console.log('Card Purchase Successful')
     }
     catch (err) {
         console.log(err)
@@ -316,8 +339,34 @@ app.get('/store/search', (req, res) => {
         .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir, user: req.session.user}));
 });
 
-app.post('/store/search/add', isLoggedIn, (req, res) => {
-    
+app.post('/store/search/add', async (req,res) =>{
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    const {card_id,card_name,description,image_url,mana_cost,price,rarity,user_id} = req.body;
+    // console.log(req.body);
+    // console.log(description)
+    try {
+        await db.oneOrNone('INSERT INTO cardinfo (card_id,card_name,description,image_url,mana_cost,price,rarity) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (card_id) DO NOTHING',[card_id,card_name,description,image_url,mana_cost,price,rarity]);
+        try{
+            const testDupe = await db.any('SELECT COALESCE((SELECT t.trade_id FROM cardinfo ci JOIN trade t ON t.card_id = ci.card_id JOIN cart c ON c.trade_id = t.trade_id WHERE c.user_id = $2 AND t.card_id = $1),0) AS trade_ID;',[card_id,user_id]);
+            if(testDupe[0].trade_id == 0){
+                await db.oneOrNone('WITH tradeIdReturn AS (INSERT INTO trade (card_id,trade_quantity,trade_price) VALUES ($1,1,$2) RETURNING trade_id) INSERT INTO cart (count,trade_id,user_id) VALUES (1,(SELECT trade_id FROM tradeIdReturn),$3);',[card_id,price,user_id])
+                console.log('Cart Insertion success')
+            }
+            else if(testDupe[0].trade_id !== 0){
+                await db.oneOrNone('UPDATE trade SET trade_quantity = (SELECT trade_quantity FROM trade WHERE trade_id = $1)+1 WHERE trade_id = $1',[testDupe[0].trade_id])
+                console.log('Cart Update success')
+            }
+        }
+        catch(err){
+            console.log('Cart Insert err:',err);
+        }
+    }
+    catch (err) {
+        console.log(err)
+    }
+    // res.render('pages/store', {message: 'card added'});
 });
 
 // -------------------------------------  ROUTES for trade.hbs   ----------------------------------------------

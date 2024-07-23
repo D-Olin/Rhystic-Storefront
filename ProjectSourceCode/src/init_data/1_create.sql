@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS userinfo (
     password VARCHAR(100) NOT NULL,
     money DECIMAL(8,2) NOT NULL DEFAULT 100,
     pfp_url TEXT NOT NULL DEFAULT '/img/profile_circle_icon.png'
-);
+);  
 
 DROP TABLE IF EXISTS cardinfo CASCADE;
 CREATE TABLE IF NOT EXISTS cardinfo (
@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS user_to_card (
     user_id INT NOT NULL,
     card_id VARCHAR(36) NOT NULL,
     owned_count INT NOT NULL,
+    PRIMARY KEY (user_id,card_id),
     FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
     FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
 );
