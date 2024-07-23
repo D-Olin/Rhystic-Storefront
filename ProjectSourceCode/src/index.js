@@ -173,9 +173,82 @@ app.get('/profile', isLoggedIn, (req, res) => {
         });
 });
 
+app.post('/profile/add_card', isLoggedIn, async (req, res) => {
+    var card_id, card_name, description, image_url, mana_cost, card_price, rarity;
+    await axios({
+        url: `https://api.scryfall.com/cards/named`,
+        method: 'GET',
+        dataType: 'json',
+        params: {
+          fuzzy: req.body.card_name
+        },
+      })
+        .then(card => {
+          console.log(card.data);
+          card_id = card.data.id;
+          card_name = card.data.name;
+          description = card.data.oracle_text;
+          image_url = card.data.image_uris.large;
+          mana_cost = card.data.mana_cost;
+          card_price = card.data.prices.usd;
+          rarity = card.data.rarity;
+          console.log(card_id);
+        })
+        .catch(error => {
+          console.error(error);
+          return res.status(401).send("Error querying for card.");
+        });
+        
+    console.log('Card ID:');
+    console.log(card_id);
+    if(card_id == null){
+        return res.status(401).send("Could not find queried card.");
+    }
+  const { quantity } = req.body;
+  const user_id = req.session.user.user_id; // Assuming you have user session setup
+
+  const card_in_db_query = `SELECT * FROM cardinfo WHERE card_id = $1 LIMIT 1;`; 
+  const card_in_db = await db.oneOrNone(card_in_db_query, [card_id]);
+  if(card_in_db == null){
+    const insert_card_query = `INSERT INTO cardinfo (card_id, card_name, description, image_url, mana_cost, price, rarity) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+    await db.one(insert_card_query, [card_id, card_name, description, image_url, mana_cost, card_price, rarity])
+        .then(card => {
+            console.log(card);
+        })
+        .catch(error => {
+            console.error(error);
+            return res.status(401).send("Could not insert card into database.");
+        });
+  }
+
+  const num_card_owned = await db.oneOrNone(`SELECT owned_count FROM user_to_card WHERE user_id = $1 AND card_id = $2;`, [user_id, card_id]);
+  if(num_card_owned == null){
+    const card_to_user_query = `INSERT INTO user_to_card (user_id, card_id, owned_count) VALUES ($1, $2, $3) RETURNING *;`;
+    await db.one(card_to_user_query, [user_id, card_id, quantity])
+        .then(user_to_card =>{
+            console.log(user_to_card);
+        })
+        .catch(error => {
+            console.error(error);
+            return res.status(401).send("Could not insert relation into database."); 
+        })
+  }else{
+    const card_to_user_query = `UPDATE user_to_card SET owned_count = $1 WHERE user_id = $2 AND card_id = $3 RETURNING *;`;
+    await db.one(card_to_user_query, [num_card_owned + quantity, user_id, card_id])
+        .then(user_to_card =>{
+            console.log(user_to_card);
+        })
+        .catch(error => {
+            console.error(error);
+            return res.status(401).send("Could not insert relation into database."); 
+        })
+  }
+  return res.redirect('/profile');
+});
+
 // -------------------------------------  ROUTES for cart.hbs   ----------------------------------------------
 
-app.get('/cart',async(req,res)=> {
+app.get('/cart', isLoggedIn, async(req,res)=> {
     if (!req.session.user) {
         return res.redirect('/login');
     }
@@ -220,6 +293,8 @@ app.post('/cart/buy', async(req,res)=>{
 
 
 
+
+
 // -------------------------------------  ROUTES for store.hbs   ----------------------------------------------
 app.get('/store/search', (req, res) => {
     var search_query = req.query.q;
@@ -254,8 +329,13 @@ app.get('/trade', isLoggedIn, (req, res) => {
     JOIN cardinfo ON trade.card_id = cardinfo.card_id 
     JOIN user_to_trade ON trade.trade_id = user_to_trade.trade_id 
     JOIN userinfo ON user_to_trade.seller_id = userinfo.user_id;`)
-    .then(trades => {
-      res.render('pages/trade', { trades, user: req.session.user });
+    .then(async (trades) => {
+        const cards = await db.any(`SELECT cardinfo.card_id, cardinfo.card_name, user_to_card.owned_count
+            FROM cardinfo 
+            INNER JOIN user_to_card
+            ON cardinfo.card_id = user_to_card.card_id
+            WHERE user_to_card.user_id = $1`, [req.session.user.user_id]);
+        res.render('pages/trade', { trades, cards, user: req.session.user });
     })
     .catch(error => {
       console.log(error);
@@ -266,48 +346,8 @@ app.get('/trade', isLoggedIn, (req, res) => {
 // Route to create a new trade
 app.post('/trade/create', isLoggedIn, async (req, res) => {
     //TODO: Select cards from inventory instead of searching by card id
-  var card_id, card_name, card_price;
-    await axios({
-        url: `https://api.scryfall.com/cards/named`,
-        method: 'GET',
-        dataType: 'json',
-        params: {
-          fuzzy: req.body.card_name
-        },
-      })
-        .then(card => {
-          console.log(card.data);
-          card_id = card.data.id;
-          card_name = card.data.name;
-          card_price = card.data.prices.usd;
-          console.log(card_id);
-        })
-        .catch(error => {
-          console.error(error);
-          return res.status(401).send("Error querying for card.");
-        });
-        
-    console.log('Card ID:');
-    console.log(card_id);
-    if(card_id == null){
-        return res.status(401).send("Could not find queried card.");
-    }
-  const { trade_quantity, trade_price } = req.body;
+  const { card_id, trade_quantity, trade_price } = req.body;
   const seller_id = req.session.user.user_id; // Assuming you have user session setup
-
-  const card_in_db_query = `SELECT * FROM cardinfo WHERE card_id = $1 LIMIT 1;`; 
-  const card_in_db = await db.oneOrNone(card_in_db_query, [card_id]);
-  if(card_in_db == null){
-    const insert_card_query = `INSERT INTO cardinfo (card_id, card_name, price) VALUES ($1, $2, $3) RETURNING *;`;
-    await db.one(insert_card_query, [card_id, card_name, card_price])
-        .then(card => {
-            console.log(card);
-        })
-        .catch(error => {
-            console.error(error);
-            return res.status(401).send("Could not insert card into database.");
-        });
-  }
 
   db.tx(t => {
     return t.one('INSERT INTO trade(card_id, trade_quantity, trade_price) VALUES($1, $2, $3) RETURNING trade_id', [card_id, trade_quantity, trade_price])

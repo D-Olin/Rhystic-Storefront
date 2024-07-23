@@ -1,28 +1,16 @@
-{{!-- layouts/main.hbs --}}
-{{!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Cards</title>
-  <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
-  {{{ body }}}
-</body>
-</html> --}}
 
-{{!-- pages/trade.hbs --}}
-{{!-- Trade Page --}}
-{{!-- {{#extends 'layouts/main'}}
-{{#block 'content'}} --}}
 <h1>Trade Cards</h1>
 
 <div class="container-fluid">
-<h2>Create a Trade</h2>
+  <h2>Create a Trade</h2>
   <form action="/trade/create" method="POST">
-    <label for="card_name">Card Name:</label>
-    <input type="text" id="card_name" name="card_name" required><br>
+    <label for="card_id">Card Name:</label>
+    <select type="text" id="card_id" name="card_id" required>
+      {{#each cards}}
+         <option value="{{card_id}}">{{card_name}}</option>
+      {{/each}}
+    </select>
+    <br>
     
     <label for="trade_quantity">Quantity:</label>
     <input type="number" id="trade_quantity" name="trade_quantity" required><br>
@@ -55,4 +43,3 @@
     {{/each}}
   </tbody>
 </table>
-{{!-- {{/block}} --}}

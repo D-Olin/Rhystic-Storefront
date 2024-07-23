@@ -39,11 +39,11 @@ CREATE TABLE IF NOT EXISTS cart (
 
 DROP TABLE IF EXISTS user_to_card CASCADE;
 CREATE TABLE IF NOT EXISTS user_to_card (
-user_id INT NOT NULL,
-card_id VARCHAR(36) NOT NULL,
-owned_count INT NOT NULL,
-FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
-FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
+    user_id INT NOT NULL,
+    card_id VARCHAR(36) NOT NULL,
+    owned_count INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS user_to_trade CASCADE;
