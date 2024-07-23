@@ -5,16 +5,19 @@ CREATE TABLE IF NOT EXISTS userinfo (
     username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    money int NOT NULL DEFAULT 100,
-    pfp_url text DEFAULT '/img/profile_circle_icon.png'/* ,
-    cart text[][] --json obj of trade ids [[id,count],[id,count]] */
+    money DECIMAL(8,2) NOT NULL DEFAULT 100,
+    pfp_url TEXT NOT NULL DEFAULT '/img/profile_circle_icon.png'
 );
 
 DROP TABLE IF EXISTS cardinfo CASCADE;
 CREATE TABLE IF NOT EXISTS cardinfo (
     card_id VARCHAR(36) PRIMARY KEY NOT NULL,
     card_name TEXT NOT NULL,
-    price DECIMAL(10,2)
+    description TEXT NOT NULL,
+    image_url TEXT NOT NULL,
+    mana_cost TEXT,
+    price DECIMAL(10,2),
+    rarity VARCHAR(100) NOT NULL CONSTRAINT limited_values CHECK (rarity in ('common', 'uncommon', 'rare', 'mythic','special','bonus'))
 );
 
 DROP TABLE IF EXISTS trade CASCADE;

@@ -1,34 +1,54 @@
 <div class="container-fluid text-center">
 <div class="row">
-    {{>user_profile}}
-    <div class="col" style="background-color:lightblue;">
+    <div class="col-2" style="position: sticky;">
+        <div class="form-container">
+            <h1>Profile</h1>
+            <img src={{user.pfp_url}} style="width: inherit;" >
+            <p></p>
+            <p><strong>Name:</strong> {{user.name}}</p>
+            <p><strong>Username:</strong> {{user.username}}</p>
+            <p><strong>Email:</strong> {{user.email}}</p>
+            <p><strong>Money:</strong> ${{user.money}}</p>
+            <p></p>
+            <form action="/logout" method="POST">
+                <input type="submit" value="Logout" class="btn">
+            </form>
+        </div>
+        <div class="form-container" id="settingsPartial" style="display: block;">
+            <h1>Settings</h1>
+            <form action="/profile/edit" method="POST">
+                <input type="text" name='pfp_url' value={{pfp_url}} />
+                <input type="text" name="name" value={{name}} />
+                <input type="text" name="username" value={{username}} />
+                <input type="submit" value="Submit" class="btn">
+            </form>
+        </div>
+    </div>
+    <div class="col">
             {{#each card}}
                 <table>
-                    <tr style="background-color:red;">
+                    <tr>
                         <td style="width: inherit;">
                             <img src={{image_url}} height=350 width=250>
                         </td>
-                        <td style="background-color: aquamarine;">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <h3>{{card_name}} — {{mana_cost}}</h3>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h4>Quantity: {{owned_count}}</h4>
-                                    </td>
-                                    <td>
-                                        <h4>Cost: ${{price}}</h4>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <p>{{description}}</p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td style="width: 100%;" class="">
+                            <div class="col" style="text-align:left">
+                                <div class="row">
+                                    <h3>{{card_name}} — {{mana_cost}}</h3>
+                                </div>
+                                <div class="row">
+                                    <div></div>
+                                    <div>
+                                        <p>Quantity: {{owned_count}}</p>
+                                        <p>Cost per Card: ${{price}}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div>
+                                        <h5>Description: {{description}}</h5>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </div>
                 </table>

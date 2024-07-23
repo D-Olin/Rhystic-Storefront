@@ -66,7 +66,14 @@ db.connect()
 // -------------------------------------  ROUTES for home.hbs   ----------------------------------------------
 
 app.get('/', (req, res) => {
-    res.render('pages/home', {user: req.session.user});
+    if (!req.session.user) {
+        return res.render('pages/home');
+    }
+    else{
+        res.render('pages/home', {
+            user: req.session.user,
+        });
+    }
 });
 
 // -------------------------------------  ROUTES for login.hbs   ----------------------------------------------
@@ -108,7 +115,6 @@ app.post('/signup', async (req, res) => {
     const { name, username, email, password } = req.body;
     console.log('Received data:', { name, username, email, password });
     const hashedPassword = await bcrypt.hash(password, 10);
-
     try {
         const user = await db.any(
             `INSERT INTO userinfo (name, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *;`,
@@ -118,8 +124,10 @@ app.post('/signup', async (req, res) => {
         req.session.user = user;
 
         console.log('User successfully inserted');
+        // res.json({status: 200, message: 'Success'});
         res.redirect('/login');
-    } catch (err) {
+    } 
+    catch (err) {
         console.error('Error inserting user:', err);
         res.status(400).send({error: 'Error inserting user'});
         //res.status(400).redirect('/signup');
@@ -164,6 +172,53 @@ app.get('/profile', isLoggedIn, (req, res) => {
             console.log(err);
         });
 });
+
+// -------------------------------------  ROUTES for cart.hbs   ----------------------------------------------
+
+app.get('/cart',async(req,res)=> {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    try{
+        const cards = await db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id WHERE trade_id IN (SELECT unnest(cart) FROM userinfo ui WHERE ui.user_id = $1)', [req.session.user.user_id]);
+        const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
+
+        res.render('pages/cart', {
+            user,
+            card:cards
+        });
+    }
+    catch(err) {
+        console.log(err);
+    };
+});
+
+app.post('/cart/remove', async (req,res)=>{
+    const{user_id,trade_id}=req.body
+    try{
+        await db.oneOrNone('UPDATE userinfo SET cart=array_remove(cart, $1) WHERE user_id = $2;',[trade_id,user_id]);
+        await db.oneOrNone('DELETE FROM trade WHERE trade_id = $1',[trade_id]);
+    }
+    catch (err) {
+        console.log(err)
+    }
+    return res.redirect('/cart');
+});
+
+app.post('/cart/buy', async(req,res)=>{
+    const{totalPrice,user_id,trade_id,card_id,trade_quantity}=req.body
+    try{
+        await db.oneOrNone('INSERT INTO user_to_card (user_id,card_id,owned_count) VALUES ($1,$2,$4) ON CONFLICT (user_id,card_id) DO UPDATE SET owned_count= user_to_card.owned_count+$4::INT  WHERE (user_to_card.user_id=$1) AND (user_to_card.card_id=$2)',[user_id,card_id,trade_id,trade_quantity]);
+        await db.oneOrNone('DELETE FROM trade WHERE trade_id = $1',[trade_id]);
+        await db.oneOrNone('UPDATE userinfo SET cart=array_remove(cart, $1), money=userinfo.money-$3::DECIMAL WHERE user_id = $2;',[trade_id,user_id,totalPrice]);
+    }
+    catch (err) {
+        console.log(err)
+    }
+    return res.redirect('/cart');
+});
+
+
 
 // -------------------------------------  ROUTES for store.hbs   ----------------------------------------------
 app.get('/store/search', (req, res) => {
