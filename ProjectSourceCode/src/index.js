@@ -92,6 +92,7 @@ app.post('/login', async (req, res) => {
 
         if (user && (await bcrypt.compare(password, user.password))) {
             req.session.user = user;
+            req.session.msg = '';
             res.redirect('/');
         } else {
             res.redirect('/login');
@@ -107,7 +108,8 @@ app.post('/login', async (req, res) => {
 
 // Serve signup page
 app.get('/signup', (req, res) => {
-    res.render('pages/signup', {user: req.session.user});
+    res.render('pages/signup', {user: req.session.user,message:''});
+    req.session.msg = '';
 });
 
 // Handle user registration
@@ -170,9 +172,10 @@ app.get('/profile', isLoggedIn, async(req, res) => {
         const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
         res.render('pages/profile', {
             user,
-            card
+            card,
+            message:req.session.msg
         });
-        console.log(req.session.user)
+        req.session.msg='';
         console.log(user)
     }
     catch(err){
@@ -181,14 +184,32 @@ app.get('/profile', isLoggedIn, async(req, res) => {
 });
 
 app.post('/profile/edit', isLoggedIn, async(req,res) => {
-    const{name,username,pfp_url,user_id} = req.body;
+    const {nameN,usernameN,pfp_urlN,username,user_id} = req.body;
     try{
-        await db.oneOrNone('UPDATE userinfo SET pfp_url = $3, name = $1, username = $2 WHERE user_id = $4',[name,username,pfp_url,user_id])
-        console.log('User Update Successful')
+        var dupeUser;
+        if(String(usernameN) === String(username)){
+            dupeUser = 1;
+        }
+        else{
+            dupeUser = await db.oneOrNone('SELECT CASE WHEN EXISTS (SELECT username FROM userinfo WHERE username LIKE $1) THEN 0 ELSE 1 END;',[usernameN]);
+        }
+        
+        if(dupeUser === 1){
+            await db.oneOrNone('UPDATE userinfo SET pfp_url = $3, name = $1, username = $2 WHERE user_id = $4',[nameN,usernameN,pfp_urlN,user_id])
+            console.log('User Update Successful');
+            req.session.msg = 'Successfully Updated';
+        }
+        else{
+            console.log('dupe user');
+            req.session.msg = 'Duplicate username. Please enter new username';
+            return res.redirect('/profile')
+        }
+
     }
     catch(err){
         console.log(err)
     }
+    
     return res.redirect('/profile')
 });
 
@@ -275,13 +296,15 @@ app.get('/cart', isLoggedIn, async(req,res)=> {
         return res.redirect('/login');
     }
     try{
-        const cards = await db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id JOIN cart c ON t.trade_id = c.trade_id WHERE c.user_id = $1', [req.session.user.user_id]);
+        const card = await db.any('SELECT ci.*,t.trade_quantity,t.trade_id FROM cardinfo ci JOIN trade t ON ci.card_id = t.card_id JOIN cart c ON t.trade_id = c.trade_id WHERE c.user_id = $1', [req.session.user.user_id]);
         const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
 
         res.render('pages/cart', {
             user,
-            card:cards
+            card,
+            message:req.session.msg
         });
+        req.session.msg='';
     }
     catch(err) {
         console.log(err);
@@ -289,24 +312,32 @@ app.get('/cart', isLoggedIn, async(req,res)=> {
 });
 
 app.post('/cart/remove', async (req,res)=>{
-    const{user_id,trade_id}=req.body
+    const{user_id,trade_id,card_name}=req.body
     try{
         await db.oneOrNone('DELETE FROM cart WHERE trade_id=$1 AND user_id = $2; DELETE FROM trade WHERE trade_id = $1;',[trade_id,user_id]);
         console.log('Card Removal Successful')
+        req.session.msg = String('Card Removal Successful: '+card_name);
     }
     catch (err) {
         console.log(err)
+        req.session.msg = 'Card Removal Unsuccessful'
     }
     return res.redirect('/cart');
 });
 
 app.post('/cart/buy', async(req,res)=>{
-    const{totalPrice,user_id,trade_id,card_id,trade_quantity}=req.body
+    const{totalPrice,user_id,trade_id,card_id,trade_quantity,card_name}=req.body
     try{
+        var userMoney = db.oneOrNone('SELECT money FROM userinfo WHERE user_id = $1',[user_id]);
+        if(userMoney < totalPrice){
+            req.session.msg = 'Card Purchase Unsuccessful. Not Enough Money';
+            return res.redirect('/cart');
+        }
         await db.oneOrNone('INSERT INTO user_to_card (user_id,card_id,owned_count) VALUES ($1,$2,$4) ON CONFLICT (user_id,card_id) DO UPDATE SET owned_count= user_to_card.owned_count+$4::INT  WHERE (user_to_card.user_id=$1) AND (user_to_card.card_id=$2)',[user_id,card_id,trade_id,trade_quantity]);
         await db.oneOrNone('DELETE FROM cart WHERE trade_id=$1 AND user_id = $2; DELETE FROM trade WHERE trade_id = $1;',[trade_id,user_id]);
         await db.oneOrNone('UPDATE userinfo SET money=userinfo.money-$3::DECIMAL WHERE user_id = $2;',[trade_id,user_id,totalPrice]);
         console.log('Card Purchase Successful')
+        req.session.msg = String('Card Purchase Successful: '+card_name+' for $'+totalPrice)
     }
     catch (err) {
         console.log(err)
@@ -336,14 +367,15 @@ app.get('/store/search', (req, res) => {
 
     fetch(api_call, { method: "GET" })
         .then((response) => response.json())
-        .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir, user: req.session.user}));
+        .then((json) => res.render('pages/store', { json, search_query, sort_by, sort_dir, user: req.session.user,message:req.session.msg}))
+        .then((json) => req.session.msg ='');
 });
 
 app.post('/store/search/add', async (req,res) =>{
     if (!req.session.user) {
         return res.redirect('/login');
     }
-    const {card_id,card_name,description,image_url,mana_cost,price,rarity,user_id} = req.body;
+    const {card_id,card_name,description,image_url,mana_cost,price,rarity,user_id,search_query} = req.body;
     // console.log(req.body);
     // console.log(description)
     try {
@@ -366,7 +398,8 @@ app.post('/store/search/add', async (req,res) =>{
     catch (err) {
         console.log(err)
     }
-    // res.render('pages/store', {message: 'card added'});
+    req.session.msg = String('Card Added Successfully: '+card_name+' for $'+price);
+    res.redirect(String('/store/search?q='+search_query));
 });
 
 // -------------------------------------  ROUTES for trade.hbs   ----------------------------------------------

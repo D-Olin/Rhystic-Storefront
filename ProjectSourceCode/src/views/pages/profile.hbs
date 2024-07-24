@@ -17,43 +17,52 @@
             <div class="form-container" id="settingsPartial" style="display: block;">
                 <h1>Settings</h1>
                 <form action="/profile/edit" method="POST">
-                    <input type="text" name="name" value='{{user.name}}' />
-                    <input type="text" name="username" value={{user.username}} />
-                    <input type="text" name='pfp_url' value={{user.pfp_url}} />
+                    <input type="text" name="nameN" value='{{user.name}}' />
+                    <input type="text" name="usernameN" value='{{user.username}}' />
+                    <input type="text" name='pfp_urlN' value={{user.pfp_url}} />
+
+                    <input type="hidden" name="username" value='{{user.username}}' />
                     <input type="hidden" name="user_id" value={{user.user_id}} />
                     <input type="submit" value="Submit" class="btn">
                 </form>
             </div>
         </div>
         <div class="col">
-            {{#each card}}
-                <table>
-                    <tr>
-                        <td style="width: inherit;">
-                            <img src={{image_url}} height=350 width=250>
-                        </td>
-                        <td style="width: 100%;" class="">
-                            <div class="col" style="text-align:left">
-                                <div class="row">
-                                    <h3>{{card_name}} — {{mana_cost}}</h3>
-                                </div>
-                                <div class="row">
-                                    <div></div>
+            {{#if card}}
+                {{#each card}}
+                    <table>
+                        <tr>
+                            <td style="width: inherit;">
+                                <img src={{image_url}} height=350 width=250>
+                            </td>
+                            <td style="width: 100%;" class="">
+                                <div class="col" style="text-align:left">
+                                    <div class="row">
+                                        <h3>{{card_name}} — {{mana_cost}}</h3>
+                                    </div>
+                                    <div class="row">
+                                        <div></div>
+                                        <div>
+                                            <p>Quantity: {{owned_count}}</p>
+                                            <p>Cost per Card: ${{price}}</p>
+                                        </div>
+                                    </div>
                                     <div>
-                                        <p>Quantity: {{owned_count}}</p>
-                                        <p>Cost per Card: ${{price}}</p>
+                                        <div>
+                                            <h5>Description: {{description}}</h5>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div>
-                                        <h5>Description: {{description}}</h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </div>
-                </table>
-            {{/each}}
+                            </td>
+                        </div>
+                    </table>
+                {{/each}}
+            {{else}}
+            <div class="col">
+                <br><br><br>
+                <h2>No matching cards found.</h2>
+            </div>
+            {{/if}}
         </div>
     </div>
     <div class="row">

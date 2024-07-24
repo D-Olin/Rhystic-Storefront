@@ -16,58 +16,67 @@
         </div>
     </div>
     <div class="col">
-            {{#each card}}
-                <table onload="mult()">
-                    <tr>
-                        <td style="width: inherit;">
-                            <img src={{image_url}} height=350 width=250>
-                        </td>
-                        <td style="width: 100%;" class="">
-                            <div class="col" style="text-align:left">
-                                <div class="row">
-                                    <h3>{{card_name}} — {{mana_cost}}</h3>
-                                </div>
-                                <div class="row">
-                                    <div></div>
+            {{#if card}}
+                {{#each card}}
+                    <table onload="mult()">
+                        <tr>
+                            <td style="width: inherit;">
+                                <img src={{image_url}} height=350 width=250>
+                            </td>
+                            <td style="width: 100%;" class="">
+                                <div class="col" style="text-align:left">
+                                    <div class="row">
+                                        <h3>{{card_name}} — {{mana_cost}}</h3>
+                                    </div>
+                                    <div class="row">
+                                        <div></div>
+                                        <div>
+                                            <p>Quantity: {{trade_quantity}}</p>
+                                            <p>Cost per Card: ${{price}}</p>
+                                        </div>
+                                    </div>
                                     <div>
-                                        <p>Quantity: {{trade_quantity}}</p>
-                                        <p>Cost per Card: ${{price}}</p>
+                                        <div>
+                                            <h5>Description: {{description}}</h5>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div>
-                                        <h5>Description: {{description}}</h5>
+                            </td>
+                            <td>
+                                <div class="col" style="text-align:right;">
+                                    <div class="row">
+                                        <input type="hidden" id="num1" value={{price}}/><br>
+                                        <input type="hidden" id="num2" value={{trade_quantity}}/>
+                                        <h3 id="result">NaN</h3>
+                                        <form onload="mult()" method="post" action="/cart/buy" value=0.0>
+                                            <input type="hidden" id="totalPrice" name="totalPrice"/>
+                                            <input type="hidden" name="user_id" value={{../user.user_id}} />
+                                            <input type="hidden" name="trade_id" value={{trade_id}} />
+                                            <input type="hidden" name="card_id" value={{card_id}} />
+                                            <input type="hidden" name="trade_quantity" value={{trade_quantity}} />
+                                            <input type="hidden" name="card_name" value='{{card_name}}' />
+                                            <button type="submit" >Purchase</button>
+                                        </form>
+                                        <form method="post" action="/cart/remove">
+                                            <input type="hidden" name="user_id" value={{../user.user_id}} />
+                                            <input type="hidden" name="trade_id" value={{trade_id}} />
+                                            <input type="hidden" name="card_name" value='{{card_name}}' />
+                                            <button type="submit" >Remove</button>
+                                        </form>
+                                    </div>
+                                    <div class="row">
                                     </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="col" style="text-align:right;">
-                                <div class="row">
-                                    <input type="hidden" id="num1" value={{price}}/><br>
-                                    <input type="hidden" id="num2" value={{trade_quantity}}/>
-                                    <h3 id="result">NaN</h3>
-                                    <form onload="mult()" method="post" action="/cart/buy" value=0.0>
-                                        <input type="hidden" id="totalPrice" name="totalPrice"/>
-                                        <input type="hidden" name="user_id" value={{../user.user_id}} />
-                                        <input type="hidden" name="trade_id" value={{trade_id}} />
-                                        <input type="hidden" name="card_id" value={{card_id}} />
-                                        <input type="hidden" name="trade_quantity" value={{trade_quantity}} />
-                                        <button type="submit" >Purchase</button>
-                                    </form>
-                                    <form method="post" action="/cart/remove">
-                                        <input type="hidden" name="user_id" value={{../user.user_id}} />
-                                        <input type="hidden" name="trade_id" value={{trade_id}} />
-                                        <button type="submit" >Remove</button>
-                                    </form>
-                                </div>
-                                <div class="row">
-                                </div>
-                            </div>
-                        </td>
-                    </div>
-                </table>
-            {{/each}}
+                            </td>
+                        </div>
+                    </table>
+                {{/each}}
+            {{else}}
+            <div class="col">
+                <br><br><br>
+                <h2>No matching cards found.</h2>
+            </div>
+            {{/if}}
     </div>
 </div>
 <script>
