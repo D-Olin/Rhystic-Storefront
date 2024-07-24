@@ -240,7 +240,6 @@ app.post('/profile/add_card', isLoggedIn, async (req, res) => {
         .catch(error => {
             console.error(error);
             req.session.msg = String('Unable to find card. Please enter new card.');
-            return res.redirect('/profile');
         });
         
     console.log('Card ID:'+card_id);
