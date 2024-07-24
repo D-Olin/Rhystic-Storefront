@@ -2,17 +2,17 @@ DROP TABLE IF EXISTS userinfo CASCADE;
 CREATE TABLE IF NOT EXISTS userinfo (
     user_id SERIAL PRIMARY KEY NOT NULL,
     name VARCHAR(100) NOT NULL,
-    username VARCHAR(100) NOT NULL,
+    username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    money int NOT NULL DEFAULT 100
-    -- pfp_url text DEFAULT "/img/profile_circle_icon.png"
+    money DECIMAL(8,2) NOT NULL DEFAULT 100,
+    pfp_url TEXT NOT NULL DEFAULT '/img/profile_circle_icon.png'
 );
 
 DROP TABLE IF EXISTS cardinfo CASCADE;
 CREATE TABLE IF NOT EXISTS cardinfo (
-    card_id SERIAL PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
+    card_id VARCHAR(36) PRIMARY KEY NOT NULL,
+    card_name TEXT NOT NULL,
     description TEXT NOT NULL,
     image_url TEXT NOT NULL,
     mana_cost TEXT,
@@ -20,12 +20,36 @@ CREATE TABLE IF NOT EXISTS cardinfo (
     rarity VARCHAR(100) NOT NULL CONSTRAINT limited_values CHECK (rarity in ('common', 'uncommon', 'rare', 'mythic','special','bonus'))
 );
 
+DROP TABLE IF EXISTS trade CASCADE;
+CREATE TABLE IF NOT EXISTS trade (
+    trade_id SERIAL PRIMARY KEY NOT NULL,
+    card_id VARCHAR(36) NOT NULL,
+    trade_quantity INT NOT NULL,
+    trade_price DECIMAL(10,2)
+);
+
+DROP TABLE IF EXISTS cart CASCADE;
+CREATE TABLE IF NOT EXISTS cart (
+    count INT NOT NULL,
+    trade_id INT NOT NULL,
+    user_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (trade_id) REFERENCES trade (trade_id) ON DELETE CASCADE
+);
+
 DROP TABLE IF EXISTS user_to_card CASCADE;
 CREATE TABLE IF NOT EXISTS user_to_card (
-user_id INT NOT NULL,
-card_id INT NOT NULL,
-owned_count INT NOT NULL,
-cart_count INT NOT NULL,
-FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
-FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
+    user_id INT NOT NULL,
+    card_id VARCHAR(36) NOT NULL,
+    owned_count INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (card_id) REFERENCES cardinfo (card_id) ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS user_to_trade CASCADE;
+CREATE TABLE IF NOT EXISTS user_to_trade (
+    seller_id INT NOT NULL,
+    trade_id INT NOT NULL,
+    FOREIGN KEY (seller_id) REFERENCES userinfo (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (trade_id) REFERENCES trade (trade_id) ON DELETE CASCADE
 );

@@ -1,21 +1,29 @@
-<nav class="navbar navbar-expand-lg" id="navbar">
-  <div class="container-fluid">
-      <ul class="navbar-nav" class="navbar-brand">
-        <li class="nav-item">
-          <a class="nav-link" href="/">Home</a>
-        </li>
-      </ul>
-      <ul class="nav-item dropdown">
-        <button class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-          <img src="/img/profile_circle_icon.png" width="35" height="35" id="dropdown_icon">
-          <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="#">Test</a></li>
-          <li><a class="dropdown-item" href="#">Test2</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#">Login/Register</a></li>
+<nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: #B3CEEA; position:sticky;" id="navbar">
+    <div class="container-fluid">
+        <ul class="navbar-nav" class="navbar-brand">
+            <li class="nav-item">
+                <a class="nav-link" href="/">Home</a>
+            </li>
         </ul>
-      </ul>    
-  </div>
+        <ul class="nav-item dropdown">
+            <button class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src={{#if user.name}}{{user.pfp_url}}{{else}}"/img/profile_circle_icon.png"{{/if}} width="35" height="35" id="dropdown_icon" style="border-radius: 50;">
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {{#if user}}
+                    <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                    <li><a class="dropdown-item" href="/trade">Trading</a></li>
+                    <li><a class="dropdown-item" href="/cart">Cart</a></li>
+                    <div class="dropdown-divider"></div>
+                    <div class="container-fluid p-2">
+                        <li><form action="/logout" method="POST"><input type="submit" value="Logout" class="btn"></form></li>
+                    </div>
+                {{else}}
+                    <li><a class="dropdown-item" href="/login">Login/Register</a></li>
+                {{/if}}
+            </ul>
+        </ul>
+    </div>
 </nav>
+
