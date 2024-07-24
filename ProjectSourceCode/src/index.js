@@ -238,17 +238,19 @@ app.post('/profile/add_card', isLoggedIn, async (req, res) => {
           console.log(card_id);
         })
         .catch(error => {
-          console.error(error);
-          return res.status(401).send("Error querying for card.");
+            console.error(error);
+            req.session.msg = String('Unable to find card. Please enter new card.');
+            return res.redirect('/profile');
         });
         
-    console.log('Card ID:');
-    console.log(card_id);
+    console.log('Card ID:'+card_id);
     if(card_id == null){
-        return res.status(401).send("Could not find queried card.");
+        req.session.msg = String('Unable to find card. Please enter new card.');
+        return res.redirect('/profile');
     }
   const { quantity } = req.body;
-  const user_id = req.session.user.user_id; // Assuming you have user session setup
+  const user = await db.one('SELECT * FROM userinfo WHERE user_id = $1', [req.session.user.user_id]);
+  const user_id = user.user_id;
 
   const card_in_db_query = `SELECT * FROM cardinfo WHERE card_id = $1 LIMIT 1;`; 
   const card_in_db = await db.oneOrNone(card_in_db_query, [card_id]);
@@ -260,7 +262,8 @@ app.post('/profile/add_card', isLoggedIn, async (req, res) => {
         })
         .catch(error => {
             console.error(error);
-            return res.status(401).send("Could not insert card into database.");
+            req.session.msg = String('Unable to find card. Please enter new card.');
+            return res.redirect('/profile');
         });
   }
 
@@ -270,20 +273,22 @@ app.post('/profile/add_card', isLoggedIn, async (req, res) => {
     await db.one(card_to_user_query, [user_id, card_id, quantity])
         .then(user_to_card =>{
             console.log(user_to_card);
+            req.session.msg = String('Successfully added '+card_name+'. Quantity: '+quantity);
         })
         .catch(error => {
             console.error(error);
-            return res.status(401).send("Could not insert relation into database."); 
+            req.session.msg = String('Failed to add '+card_name+'. Error: '+error);
         })
   }else{
-    const card_to_user_query = `UPDATE user_to_card SET owned_count = $1 WHERE user_id = $2 AND card_id = $3 RETURNING *;`;
-    await db.one(card_to_user_query, [num_card_owned + quantity, user_id, card_id])
+    const card_to_user_query = `UPDATE user_to_card SET owned_count = owned_count+$1::INT WHERE user_id = $2 AND card_id = $3 RETURNING *;`;
+    await db.one(card_to_user_query, [quantity, user_id, card_id])
         .then(user_to_card =>{
             console.log(user_to_card);
+            req.session.msg = String('Successfully added '+card_name+'. Quantity: '+quantity);
         })
-        .catch(error => {
+        .catch(error => { 
             console.error(error);
-            return res.status(401).send("Could not insert relation into database."); 
+            req.session.msg = String('Failed to add '+card_name+'. Error: '+error);
         })
   }
   return res.redirect('/profile');
