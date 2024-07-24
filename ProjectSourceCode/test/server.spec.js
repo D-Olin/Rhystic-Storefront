@@ -106,7 +106,7 @@ describe('Testing Login API', () => {
       .send({ username: 'testuser', password: 'testpwd' })
       .end((err, res) => {
         expect(res).to.have.status(200);
-        expect(res).to.redirectTo(/\/profile$/);
+        expect(res).to.redirectTo(/\/$/);
         done();
       });
   });
