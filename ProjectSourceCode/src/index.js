@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const axios = require('axios');
+const { transferableAbortSignal } = require('util');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -332,11 +333,12 @@ app.post('/cart/remove', async (req,res)=>{
 app.post('/cart/buy', async(req,res)=>{
     const{totalPrice,user_id,trade_id,card_id,trade_quantity,card_name}=req.body
     try{
-        var userMoney = db.oneOrNone('SELECT money FROM userinfo WHERE user_id = $1',[user_id]);
-        if(userMoney < totalPrice){
+        var userMoney = await db.oneOrNone('SELECT money FROM userinfo WHERE user_id = $1',[user_id]);
+        if(parseFloat(userMoney.money) < parseFloat(totalPrice)){
             req.session.msg = 'Card Purchase Unsuccessful. Not Enough Money';
             return res.redirect('/cart');
         }
+        
         await db.oneOrNone('INSERT INTO user_to_card (user_id,card_id,owned_count) VALUES ($1,$2,$4) ON CONFLICT (user_id,card_id) DO UPDATE SET owned_count= user_to_card.owned_count+$4::INT  WHERE (user_to_card.user_id=$1) AND (user_to_card.card_id=$2)',[user_id,card_id,trade_id,trade_quantity]);
         await db.oneOrNone('DELETE FROM cart WHERE trade_id=$1 AND user_id = $2; DELETE FROM trade WHERE trade_id = $1;',[trade_id,user_id]);
         await db.oneOrNone('UPDATE userinfo SET money=userinfo.money-$3::DECIMAL WHERE user_id = $2;',[trade_id,user_id,totalPrice]);
